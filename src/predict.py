@@ -22,7 +22,7 @@ import scipy.sparse as sp
 import tensorflow as tf
 
 KPA_TO_MMHG = 7.50062
-DEFAULT_THRESHOLD = 0.65
+DEFAULT_THRESHOLD = 0.70
 DROPOUT_RATE = 0.3
 
 
@@ -133,10 +133,14 @@ def build_model(input_dim: int) -> tf.keras.Model:
     model = tf.keras.Sequential(
         [
             tf.keras.layers.Input(shape=(input_dim,)),
+            tf.keras.layers.Dense(128, activation="relu"),
+            tf.keras.layers.Dropout(DROPOUT_RATE),
             tf.keras.layers.Dense(64, activation="relu"),
             tf.keras.layers.Dropout(DROPOUT_RATE),
-            tf.keras.layers.Dense(32, activation="relu"),
-            tf.keras.layers.Dropout(DROPOUT_RATE),
+            # tf.keras.layers.Dense(32, activation="relu"),
+            # tf.keras.layers.Dropout(DROPOUT_RATE),
+            # tf.keras.layers.Dense(16, activation="relu"),
+            # tf.keras.layers.Dropout(DROPOUT_RATE),
             tf.keras.layers.Dense(1, activation="sigmoid"),
         ]
     )

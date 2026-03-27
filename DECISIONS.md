@@ -13,7 +13,7 @@ The question to answer is not "what does this technique do" — it is "why did Y
 I normalized systolic blood pressure by converting values under 50 as kPa into mmHg, parsed mixed-format admission dates into year/month/day features, treated age > 120 as missing, capped numeric outliers at the 1st/99th percentiles, and imputed missing `glucose_level_mgdl` with the median. I also treated `admission_type` and `discharge_destination` as categorical codes rather than continuous numbers.
 
 **Why I did it (not why the technique works — why THIS choice given what you observed in the data):**
-The presence of values like 10.67 for systolic BP is not clinically plausible in mmHg, but it becomes plausible after kPa conversion. Dropping those rows would lose signal. Dates were mixed (`YYYY-MM-DD` and `DD/MM/YYYY`), so extracting components avoids parsing failures. Only glucose had missingness, so a simple median imputation keeps the distribution stable without introducing extra assumptions. Percentile capping reduces the influence of extreme values while preserving rank order.
+The presence of values like 10.67 for systolic BP is not clinically plausible in mmHg, but it becomes possible after kPa conversion. Dropping those rows would lose signal. Dates were mixed (`YYYY-MM-DD` and `DD/MM/YYYY`), so extracting components avoids parsing failures. Only glucose had missingness, so a simple median imputation keeps the distribution stable without introducing extra assumptions. Percentile capping reduces the influence of extreme values while preserving rank order.
 
 **What I considered and rejected:**
 I considered treating low BP values as invalid and imputing them, but that would discard meaningful measurements if they were recorded in kPa. I also considered dropping the date feature entirely due to format inconsistency, but it likely carries seasonality or operational patterns.
@@ -27,7 +27,7 @@ If low BP values were not kPa, I would be inflating them and potentially biasing
 *Complete after Phase 2 (by approximately 3:00)*
 
 **What I did:**
-I used a Keras MLP with two hidden layers (64 → 32, ReLU) plus dropout (0.30) and balanced the training data via random oversampling of the minority class.
+I used a Keras MLP with four hidden layers (128 → 64 → 32 → 16, ReLU) plus dropout (0.30) and balanced the training data via random oversampling of the minority class.
 
 **Why I did it (not why the technique works — why THIS choice given what you observed in the data):**
 The dataset is small (3,800 rows) and has only ~9% positives. A small MLP adds nonlinear capacity without excessive complexity, and oversampling directly increases minority examples so the network sees enough positive cases during training. This avoids relying solely on loss weighting when the minority count is extremely low.

@@ -15,7 +15,7 @@ Predict whether a patient will be readmitted within 30 days of discharge using s
 ## My model
 
 **Architecture:**
-Neural network (Keras MLP) with two hidden layers: 64 → 32 units, ReLU activations, and Dropout=0.30 after each hidden layer.
+Neural network (Keras MLP) with four hidden layers: 128 → 64 → 32 → 16 units, ReLU activations, and Dropout=0.30 after each hidden layer.
 
 **Key preprocessing decisions:**
 - Normalize `blood_pressure_systolic` by converting values < 50 as kPa to mmHg.
@@ -33,12 +33,12 @@ I balanced the training data with random oversampling of the minority class (rea
 
 | Metric | Value |
 |--------|-------|
-| AUROC | 0.920 |
-| PR-AUC | 0.646 |
-| F1 (minority class) | 0.605 |
-| Precision (minority) | 0.548 |
-| Recall (minority) | 0.676 |
-| Decision threshold used | 0.65 |
+| AUROC | 0.918 |
+| PR-AUC | 0.653 |
+| F1 (minority class) | 0.594 |
+| Precision (minority) | 0.586 |
+| Recall (minority) | 0.603 |
+| Decision threshold used | 0.70 |
 
 ---
 

@@ -145,10 +145,10 @@ def build_model(input_dim: int) -> tf.keras.Model:
             tf.keras.layers.Dropout(DROPOUT_RATE),
             tf.keras.layers.Dense(64, activation="relu"),
             tf.keras.layers.Dropout(DROPOUT_RATE),
-            # tf.keras.layers.Dense(32, activation="relu"),
-            # tf.keras.layers.Dropout(DROPOUT_RATE),
-            # tf.keras.layers.Dense(16, activation="relu"),
-            # tf.keras.layers.Dropout(DROPOUT_RATE),
+            tf.keras.layers.Dense(32, activation="relu"),
+            tf.keras.layers.Dropout(DROPOUT_RATE),
+            tf.keras.layers.Dense(16, activation="relu"),
+            tf.keras.layers.Dropout(DROPOUT_RATE),
             tf.keras.layers.Dense(1, activation="sigmoid"),
         ]
     )

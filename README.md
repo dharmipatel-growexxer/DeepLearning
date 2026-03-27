@@ -99,3 +99,23 @@ readmission-dl/
 - The MLP is still a relatively small network; more capacity might help but risks overfitting on 3,800 rows.
 - Threshold tuning was done on a single validation split; a full cross-validated search could be more robust.
 - No external clinical context or temporal leakage checks were available, so performance in production may differ.
+
+
+---
+
+## Local setup (quick)
+
+```bash
+# 1) Create and activate venv
+python3 -m venv .venv
+. .venv/bin/activate
+
+# 2) Install dependencies
+pip install -r requirements.txt
+
+# 3) Run predictions
+python src/predict.py --input data/test.csv --output predictions.csv
+
+# 4) (Optional) Run Streamlit app
+streamlit run app.py
+```

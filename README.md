@@ -33,12 +33,12 @@ I balanced the training data with random oversampling of the minority class (rea
 
 | Metric | Value |
 |--------|-------|
-| AUROC | 0.918 |
-| PR-AUC | 0.653 |
-| F1 (minority class) | 0.594 |
-| Precision (minority) | 0.586 |
-| Recall (minority) | 0.603 |
-| Decision threshold used | 0.70 |
+| AUROC | 0.92 |
+| PR-AUC | 0.66 |
+| F1 (minority class) | 0.63 |
+| Precision (minority) | 0.672 |
+| Recall (minority) | 0.602 |
+| Decision threshold used | 0.79 |
 
 ---
 

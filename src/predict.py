@@ -7,6 +7,7 @@ Usage:
 from __future__ import annotations
 
 import argparse
+import json
 from dataclasses import dataclass
 from typing import List, Tuple
 
@@ -14,12 +15,19 @@ import numpy as np
 import pandas as pd
 from sklearn.compose import ColumnTransformer
 from sklearn.impute import SimpleImputer
-from sklearn.metrics import f1_score
+from sklearn.metrics import (
+    f1_score,
+    roc_auc_score,
+    average_precision_score,
+    precision_score,
+    recall_score,
+)
 from sklearn.utils import resample
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import OneHotEncoder, StandardScaler
 import scipy.sparse as sp
 import tensorflow as tf
+from sklearn.model_selection import train_test_split
 
 KPA_TO_MMHG = 7.50062
 DEFAULT_THRESHOLD = 0.70
@@ -217,21 +225,69 @@ def train_for_inference(train_path: str, cfg: PreprocessConfig):
         X,
         exclude_cols=[cfg.id_column] + categorical_cols,
     )
-    X = apply_outlier_bounds(X, bounds)
 
-    # Fit on balanced data for inference.
-    X_bal, y_bal = balance_training_data(X, y)
-    X_bal = X_bal.drop(columns=[cfg.id_column])
+    # ----- Evaluation split (metrics printed as JSON) -----
+    X_train, X_val, y_train, y_val = train_test_split(
+        X, y, test_size=0.2, stratify=y, random_state=42
+    )
+    X_train = apply_outlier_bounds(X_train, bounds)
+    X_val = apply_outlier_bounds(X_val, bounds)
 
-    X_proc = preprocessor.fit_transform(X_bal)
-    if sp.issparse(X_proc):
-        X_proc = X_proc.toarray()
+    X_train_bal, y_train_bal = balance_training_data(X_train, y_train)
+    X_train_bal = X_train_bal.drop(columns=[cfg.id_column])
+    X_val = X_val.drop(columns=[cfg.id_column])
+
+    X_train_proc = preprocessor.fit_transform(X_train_bal)
+    X_val_proc = preprocessor.transform(X_val)
+    if sp.issparse(X_train_proc):
+        X_train_proc = X_train_proc.toarray()
+    if sp.issparse(X_val_proc):
+        X_val_proc = X_val_proc.toarray()
 
     tf.random.set_seed(42)
-    model = build_model(input_dim=X_proc.shape[1])
+    model = build_model(input_dim=X_train_proc.shape[1])
     model.fit(
-        X_proc,
-        y_bal.values,
+        X_train_proc,
+        y_train_bal.values,
+        epochs=30,
+        batch_size=64,
+        verbose=0,
+        validation_split=0.1,
+    )
+
+    val_probs = model.predict(X_val_proc, verbose=0).ravel()
+    thresholds = np.linspace(0.05, 0.95, 19)
+    best_t, best_f1 = 0.5, -1
+    for t in thresholds:
+        preds = (val_probs >= t).astype(int)
+        f1 = f1_score(y_val, preds)
+        if f1 > best_f1:
+            best_f1, best_t = f1, t
+
+    val_preds = (val_probs >= best_t).astype(int)
+    metrics = {
+        "roc_auc": float(roc_auc_score(y_val, val_probs)),
+        "pr_auc": float(average_precision_score(y_val, val_probs)),
+        "f1": float(best_f1),
+        "precision": float(precision_score(y_val, val_preds)),
+        "recall": float(recall_score(y_val, val_preds)),
+        "threshold": float(best_t),
+    }
+    print(json.dumps({"validation_metrics": metrics}, indent=2))
+
+    # ----- Final fit on full data -----
+    X_full = apply_outlier_bounds(X, bounds)
+    X_full_bal, y_full_bal = balance_training_data(X_full, y)
+    X_full_bal = X_full_bal.drop(columns=[cfg.id_column])
+
+    X_full_proc = preprocessor.fit_transform(X_full_bal)
+    if sp.issparse(X_full_proc):
+        X_full_proc = X_full_proc.toarray()
+
+    model = build_model(input_dim=X_full_proc.shape[1])
+    model.fit(
+        X_full_proc,
+        y_full_bal.values,
         epochs=30,
         batch_size=64,
         verbose=0,
